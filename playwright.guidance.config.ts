@@ -8,6 +8,7 @@ export default defineConfig({
     "conversation.spec.ts",
     "branding.spec.ts",
     "live-trading.spec.ts",
+    "provider-signin.spec.ts",
   ],
   use: {
     ...base.use,

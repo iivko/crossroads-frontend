@@ -151,7 +151,11 @@ test("connections issue role-scoped access, show a secret once and revoke it", a
     .getByRole("button", { name: "Confirm revoke", exact: true })
     .click();
   await expect(page.getByText("0 valid credentials")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Setup required", exact: true }),
-  ).toBeDisabled();
+  const setupButtons = page.getByRole("button", {
+    name: "Setup required",
+    exact: true,
+  });
+  await expect(setupButtons).toHaveCount(2);
+  for (const button of await setupButtons.all())
+    await expect(button).toBeDisabled();
 });

@@ -27,7 +27,9 @@ The trading floor polls every five seconds, separates your business from trading
 
 The companion backend now includes a working local stdio MCP server with 13 tools; install with `uv sync --extra mcp`. Claude Desktop, Claude Code, Codex and compatible local clients can use the generated configuration. See the backend's `mcp_server/README.md`. It does not yet offer a hosted ChatGPT connector: remote OAuth, per-user authorization and public HTTPS are still required.
 
-Google and ChatGPT account linking/sign-in are implemented in the backend. Configure registered provider credentials and exact callback URLs as described in `docs/identity.md` in the backend checkout. Buttons show **Setup required** until configured. ChatGPT website sign-in currently requires OpenAI commercial trial access; a ChatGPT subscription/API key is not an OAuth client. Sign-in identities are separate from trading-agent access. Provider callback errors are explained without exposing token material.
+Google and ChatGPT account linking/sign-in are implemented in the backend. Both options remain visible on the initial sign-in screen and at the bottom of **Connections → Account sign-in**. Configure registered provider credentials and exact callback URLs as described in `docs/identity.md` in the backend checkout. Buttons show **Setup required** until configured; loading or failed availability checks leave them disabled and offer a retry on failure. First sign in with an existing Neopact password and link the provider in Connections before using it for subsequent sign-ins.
+
+ChatGPT website sign-in currently requires [approved OpenAI client registration](https://developers.openai.com/siwc/request-client-id); a ChatGPT subscription/API key is not an OAuth client. Claude Desktop and Claude Code connect through the local MCP setup above, with Claude account sign-in managed by those clients. The dashboard does not offer an unregistered Claude identity flow. Sign-in identities are separate from trading-agent access. Provider callback errors are explained without exposing token material.
 
 ## Negotiate more
 
@@ -42,6 +44,7 @@ The application uses the shared neopact logos, locally hosted Manrope and IBM Pl
 The shared [brand kit](design/neopact-brand-system/README.md) contains logos, bundled fonts, CSS/JSON tokens, component guidance, and the visual reference. Contributors and implementation agents should start with the [agent handoff](design/neopact-brand-system/AGENT-HANDOFF.md) before building UI.
 
 Open `design/neopact-brand-system/visual-guide.html` after cloning to preview the guide, or [download the standalone kit](design/neopact-brand-system.zip). Use the supplied SVG logos and retain the bundled font licenses. [Palette research](design/neopact-brand-system/PALETTE-RESEARCH.md) distinguishes measured readability from conversion hypotheses.
+
 ## Conversations, needs and human review
 
 Open a negotiation to follow the agents' actual messages, questions, replies and explanations. Offer cards show the recorded commercial terms, and image references open the product evidence. The shared conversation contains only messages and needs published to both businesses. It does not show the other workspace's private goals, limits or questions to its human.
