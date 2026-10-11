@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { readDemoPreviewConfig } from "@/lib/demo-preview";
 import type { Workspace } from "@/lib/api";
+import { mcpEndpoint } from "@/lib/mcp-endpoint";
 import {
   connectionsApi,
   type Credential,
@@ -56,6 +57,8 @@ export function Connections({ workspace }: { workspace: Workspace }) {
     "/path/to/crossroads-backend",
   );
   const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [apiUrl, setApiUrl] = useState("http://127.0.0.1:8100/api/v1");
+  const [allowLanHttp, setAllowLanHttp] = useState(false);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,6 +72,9 @@ export function Connections({ workspace }: { workspace: Workspace }) {
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
+    setApiUrl(
+      `${window.location.protocol}//${window.location.hostname}:8100/api/v1`,
+    );
     readDemoPreviewConfig()
       .then((config) => {
         if (alive.current && config.enabled && config.mcpProjectDirectory)
@@ -100,6 +106,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
   }, []);
   async function create(event: FormEvent) {
     event.preventDefault();
+    if (endpointError) return;
     setBusy(true);
     setError("");
     const scopes = [
@@ -153,6 +160,13 @@ export function Connections({ workspace }: { workspace: Workspace }) {
       if (alive.current) setBusy(false);
     }
   }
+  let endpoint: ReturnType<typeof mcpEndpoint> | undefined;
+  let endpointError = "";
+  try {
+    endpoint = mcpEndpoint(apiUrl, allowLanHttp);
+  } catch (cause) {
+    endpointError = (cause as Error).message;
+  }
   const config = JSON.stringify(
     {
       mcpServers: {
@@ -169,7 +183,10 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             "mcp_server",
           ],
           env: {
-            NEOPACT_MCP_API_URL: "http://127.0.0.1:8100/api/v1",
+            NEOPACT_MCP_API_URL: endpoint?.url,
+            ...(endpoint?.lanHttp
+              ? { NEOPACT_MCP_ALLOW_LAN_HTTP: "true" }
+              : {}),
             NEOPACT_MCP_WORKSPACE: workspace.id,
             NEOPACT_MCP_TOKEN: issued?.token || "YOUR_WORKSPACE_TOKEN",
           },
@@ -257,6 +274,46 @@ export function Connections({ workspace }: { workspace: Workspace }) {
                 </small>
               </span>
             </label>
+            <label>
+              Backend API URL
+              <input
+                type="url"
+                value={apiUrl}
+                onChange={(event) => {
+                  setApiUrl(event.target.value);
+                  setAllowLanHttp(false);
+                  setCopied(false);
+                }}
+                aria-describedby="backend-api-help"
+                required
+                spellCheck={false}
+              />
+            </label>
+            <label className="connection-permission">
+              <input
+                type="checkbox"
+                checked={allowLanHttp}
+                onChange={(event) => {
+                  setAllowLanHttp(event.target.checked);
+                  setCopied(false);
+                }}
+              />
+              <span>
+                <strong>Allow HTTP on this trusted LAN</strong>
+                <small>
+                  Local demo only. Your agent token travels unencrypted. Use a
+                  private IPv4 address on a network you trust.
+                </small>
+              </span>
+            </label>
+            <p
+              id="backend-api-help"
+              className="connection-read-access"
+              aria-live="polite"
+            >
+              {endpointError ||
+                "Use the backend address reachable from your agent’s computer, not the dashboard address."}
+            </p>
             <p className="connection-read-access">
               Read access includes the catalogue, negotiations and orders.
               Trading is off by default.
@@ -264,7 +321,9 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             <button
               type="submit"
               className="button primary"
-              disabled={busy || loading || !name.trim()}
+              disabled={
+                busy || loading || !name.trim() || Boolean(endpointError)
+              }
             >
               {busy ? "Working…" : "Create connection"}
               <ArrowUpRight size={16} />
@@ -303,7 +362,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
           </p>
         </section>
       </div>
-      {issued && (
+      {issued && !endpointError && (
         <section
           className="connection-secret"
           aria-label="New connection configuration"

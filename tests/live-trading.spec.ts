@@ -99,15 +99,46 @@ test("connections issue role-scoped access, show a secret once and revoke it", a
     });
   });
   await page.goto("/?view=connections");
+  const apiUrl = page.getByLabel("Backend API URL");
+  await expect(apiUrl).toHaveValue(
+    /http:\/\/(localhost|127\.0\.0\.1):8100\/api\/v1/,
+  );
+  const lanOptIn = page.getByLabel("Allow HTTP on this trusted LAN");
+  await expect(lanOptIn).not.toBeChecked();
+  await apiUrl.fill("http://192.168.68.109:8100/api/v1");
+  const create = page.getByRole("button", {
+    name: "Create connection",
+    exact: true,
+  });
+  await expect(create).toBeDisabled();
+  await lanOptIn.check();
   await page.getByLabel("Allow agent trading").check();
-  await page
-    .getByRole("button", { name: "Create connection", exact: true })
-    .click();
+  await create.click();
   await expect(page.getByLabel("Private MCP configuration")).toHaveValue(
     /test-one-time-secret/,
   );
   await expect(page.getByLabel("Private MCP configuration")).toHaveValue(
     /seller-workspace/,
+  );
+  let configuration = JSON.parse(
+    await page.getByLabel("Private MCP configuration").inputValue(),
+  );
+  expect(configuration.mcpServers.neopact.env.NEOPACT_MCP_API_URL).toBe(
+    "http://192.168.68.109:8100/api/v1",
+  );
+  expect(configuration.mcpServers.neopact.env.NEOPACT_MCP_ALLOW_LAN_HTTP).toBe(
+    "true",
+  );
+  await apiUrl.fill("https://market.example/api/v1");
+  await expect(lanOptIn).not.toBeChecked();
+  configuration = JSON.parse(
+    await page.getByLabel("Private MCP configuration").inputValue(),
+  );
+  expect(configuration.mcpServers.neopact.env.NEOPACT_MCP_API_URL).toBe(
+    "https://market.example/api/v1",
+  );
+  expect(configuration.mcpServers.neopact.env).not.toHaveProperty(
+    "NEOPACT_MCP_ALLOW_LAN_HTTP",
   );
   await page
     .getByRole("button", { name: "Dismiss private configuration" })

@@ -36,6 +36,13 @@ for (const role of ["buyer", "seller"] as const) {
   test(`${role} can privately request a new negotiation and see its progress`, async ({
     page,
   }) => {
+    // HTTP LAN origins lack randomUUID, but still expose getRandomValues.
+    await page.addInitScript(() => {
+      Object.defineProperty(Crypto.prototype, "randomUUID", {
+        value: undefined,
+        configurable: true,
+      });
+    });
     const state = await mockMarketplace(page, role);
     await page.clock.install();
     await page.goto("/?view=approvals&room=room-1");

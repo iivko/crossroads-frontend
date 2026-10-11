@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowLeftRight, LockKeyhole, Send } from "lucide-react";
 import { api, ApiError, type Room } from "@/lib/api";
+import { idempotencyKey } from "@/lib/idempotency";
 
 const suggestions = {
   buyer: [
@@ -84,7 +85,7 @@ export function NegotiationGuidance({
     const submission = (attempt.current ||= {
       instruction,
       expectedVersion: room.version,
-      key: crypto.randomUUID(),
+      key: idempotencyKey(),
     });
     try {
       const updated = await api.requestGuidance(
