@@ -13,6 +13,7 @@ import { readDemoPreviewConfig } from "@/lib/demo-preview";
 import type { Workspace } from "@/lib/api";
 import { mcpEndpoint } from "@/lib/mcp-endpoint";
 import { PluginInstallations } from "./plugin-installations";
+import { NegotiatorPrompt } from "./negotiator-prompt";
 import {
   connectionsApi,
   type Credential,
@@ -350,10 +351,10 @@ export function Connections({ workspace }: { workspace: Workspace }) {
               </span>
             </li>
             <li>
-              <strong>Ask your agent to check its inbox</strong>
+              <strong>Copy your negotiation prompt below</strong>
               <span>
-                Its actions appear on your trading floor. It cannot approve a
-                deal.
+                Describe your objective, then paste the prompt into your AI
+                client. Your agent listens and negotiates; you review the deal.
               </span>
             </li>
           </ol>
@@ -453,6 +454,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
           </details>
         </section>
       )}
+      <NegotiatorPrompt workspace={workspace} />
       <section className="connection-panel">
         <div className="connection-section-heading">
           <h3>Workspace connections</h3>

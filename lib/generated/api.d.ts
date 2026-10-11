@@ -974,6 +974,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/agent/prompt": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Agent Prompt
+     * @description Generate a role-specific external negotiator prompt without persisting data or starting an agent. Role/workspace come from authentication; negotiations:read is required. Optionally target one participant room or one owned buyer request, never both. Objectives cannot change permissions or hard rules. The external client listens at 20-second intervals while active; final order approvals remain human. Browser requests require Origin and X-CSRF-Token even though generation has no business side effects. No credentials or private business context are automatically embedded.
+     *
+     *     Returns `agent_prompt` and `status_code` (200). All failures use `error` and the matching HTTP `status_code`. Requires an authorized workspace membership and applicable role/scopes.
+     */
+    post: operations["agent_prompt"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/agent/inbox": {
     parameters: {
       query?: never;
@@ -1203,6 +1225,60 @@ export interface components {
        */
       status_code: 200;
     };
+    /** AgentPrompt */
+    AgentPrompt: {
+      /**
+       * Prompt
+       * @description Provider-neutral instructions to copy into a connected external AI client.
+       */
+      prompt: string;
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: "buyer" | "seller";
+      /** Workspace Id */
+      workspace_id: string;
+      /**
+       * Poll Interval Seconds
+       * @constant
+       */
+      poll_interval_seconds: 20;
+      /**
+       * Mode
+       * @enum {string}
+       */
+      mode: "start" | "resume";
+    };
+    /** AgentPromptInput */
+    AgentPromptInput: {
+      /**
+       * Objective
+       * @description Private strategy for the external agent.
+       * @default
+       */
+      objective: string;
+      /** Room Id */
+      room_id?: string | null;
+      /** Request Id */
+      request_id?: string | null;
+      /**
+       * Mode
+       * @default start
+       * @enum {string}
+       */
+      mode: "start" | "resume";
+    };
+    /** AgentPromptResponse */
+    AgentPromptResponse: {
+      agent_prompt: components["schemas"]["AgentPrompt"];
+      /**
+       * Status Code
+       * @description Equals the HTTP response status.
+       * @constant
+       */
+      status_code: 200;
+    };
     /** Approval */
     Approval: {
       /** Workspace Id */
@@ -1267,7 +1343,7 @@ export interface components {
        * Material
        * @enum {string}
        */
-      material: "polypropylene" | "wood" | "fabric";
+      material: "polypropylene" | "wood" | "fabric" | "mixed";
       /** Stackable */
       stackable: boolean;
       /** Color */
@@ -1391,9 +1467,9 @@ export interface components {
     Category: {
       /**
        * Id
-       * @constant
+       * @enum {string}
        */
-      id: "chairs";
+      id: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
       /** Name */
       name: string;
       attributes: components["schemas"]["CategoryAttributes"];
@@ -2405,9 +2481,9 @@ export interface components {
       /**
        * Category
        * @default chairs
-       * @constant
+       * @enum {string}
        */
-      category: "chairs";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
       attributes: components["schemas"]["Attributes"];
       /**
        * Unit Price
@@ -2454,9 +2530,9 @@ export interface components {
       /**
        * Category
        * @default chairs
-       * @constant
+       * @enum {string}
        */
-      category: "chairs";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
       attributes: components["schemas"]["Attributes"];
       /**
        * Unit Price
@@ -2502,9 +2578,9 @@ export interface components {
       /**
        * Category
        * @default chairs
-       * @constant
+       * @enum {string}
        */
-      category: "chairs";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
       attributes: components["schemas"]["Attributes"];
       /**
        * Unit Price
@@ -2622,16 +2698,13 @@ export interface components {
       title: string;
       /**
        * Category
-       * @constant
-       */
-      category: "chairs";
-      /** Quantity */
-      quantity: number;
-      /**
-       * Material
        * @enum {string}
        */
-      material: "any" | "polypropylene" | "wood" | "fabric";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
+      /** Quantity */
+      quantity: number;
+      /** Material */
+      material: ("polypropylene" | "wood" | "fabric" | "mixed") | "any";
       /** Stackable */
       stackable: boolean;
       /** Destination */
@@ -2672,16 +2745,13 @@ export interface components {
       /**
        * Category
        * @default chairs
-       * @constant
-       */
-      category: "chairs";
-      /** Quantity */
-      quantity: number;
-      /**
-       * Material
        * @enum {string}
        */
-      material: "any" | "polypropylene" | "wood" | "fabric";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
+      /** Quantity */
+      quantity: number;
+      /** Material */
+      material: ("polypropylene" | "wood" | "fabric" | "mixed") | "any";
       /** Stackable */
       stackable: boolean;
       /** Destination */
@@ -2714,16 +2784,13 @@ export interface components {
       /**
        * Category
        * @default chairs
-       * @constant
-       */
-      category: "chairs";
-      /** Quantity */
-      quantity: number;
-      /**
-       * Material
        * @enum {string}
        */
-      material: "any" | "polypropylene" | "wood" | "fabric";
+      category: "chairs" | "desks" | "cabinets" | "laptops" | "headphones";
+      /** Quantity */
+      quantity: number;
+      /** Material */
+      material: ("polypropylene" | "wood" | "fabric" | "mixed") | "any";
       /** Stackable */
       stackable: boolean;
       /** Destination */
@@ -4391,6 +4458,9 @@ export interface operations {
       query?: {
         q?: string;
         own?: boolean;
+        category?:
+          | ("chairs" | "desks" | "cabinets" | "laptops" | "headphones")
+          | null;
         material?: string | null;
         destination?: string | null;
         limit?: number;
@@ -9054,6 +9124,127 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["InstructionsResponse"];
+        };
+      };
+      /** @description Malformed request or unsupported action. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Missing, expired or revoked authentication. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Role, scope, workspace, browser approval or CSRF check failed. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Resource does not exist or is not visible to this workspace. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description HTTP method is not supported by this resource. */
+      405: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Stale version, conflicting state, active claim or idempotency conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Request body or image exceeds the configured limit. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Input validation, commercial policy or eligibility check failed. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Rate limit exceeded. Retry after the current rate window. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unexpected server failure. Details are not disclosed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  agent_prompt: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Select a user membership. A workspace-bound agent cannot select another workspace. */
+        "X-Workspace-ID"?: string;
+        /** @description Required for browser writes; must match a configured allowed origin. */
+        Origin?: string;
+        /** @description Required for browser writes; copy the readable market_csrf cookie. Bearer writes do not use CSRF. */
+        "X-CSRF-Token"?: string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AgentPromptInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AgentPromptResponse"];
         };
       };
       /** @description Malformed request or unsupported action. */

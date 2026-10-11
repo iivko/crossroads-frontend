@@ -13,7 +13,7 @@ async function proxy(
     !isRead &&
     !(
       req.method === "POST" &&
-      /^(auth\/(session|logout)|credentials|identity\/(google|openai)\/link|approvals\/[^/]+\/(approve|reject)|negotiations\/[^/]+\/guidance)$/.test(
+      /^(auth\/(session|logout)|credentials|agent\/prompt|identity\/(google|openai)\/link|approvals\/[^/]+\/(approve|reject)|negotiations\/[^/]+\/guidance)$/.test(
         route,
       )
     ) &&

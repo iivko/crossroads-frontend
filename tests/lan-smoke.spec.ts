@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Me, Product } from "../lib/api";
+import type { AgentPrompt } from "../lib/connections";
 
 const lanUrl = process.env.LAN_TEST_URL;
 test.use({ baseURL: lanUrl || "http://127.0.0.1:3100" });
@@ -10,6 +11,7 @@ test.skip(
 
 // Real browser/proxy/storage traffic. Only normal sign-in/out sessions are written.
 // No credentials, purchase requests, offers, approvals or orders are created.
+// POST /agent/prompt only renders instructions; it does not write business records.
 for (const [role, email] of [
   ["buyer", process.env.LAN_BUYER_EMAIL || "buyer@demo.local"],
   ["seller", process.env.LAN_SELLER_EMAIL || "forma@demo.local"],
@@ -109,6 +111,87 @@ for (const [role, email] of [
       await optIn.check();
       await expect(create).toBeEnabled();
       await expect(page.getByLabel("Allow agent trading")).not.toBeChecked();
+      const negotiator = page.getByRole("region", {
+        name: "Set up your negotiator",
+      });
+      await negotiator
+        .getByLabel("What should your agent achieve?")
+        .fill(
+          role === "buyer"
+            ? "Prefer reliable delivery and a smaller deposit."
+            : "Seek a higher feasible price with useful delivery tradeoffs.",
+        );
+      const generated = page.waitForResponse(
+        (response) =>
+          response.url().endsWith("/api/v1/agent/prompt") &&
+          response.request().method() === "POST",
+      );
+      await negotiator
+        .getByRole("button", { name: "Generate negotiation prompt" })
+        .click();
+      const response = await generated;
+      expect(response.status()).toBe(200);
+      const envelope = (await response.json()) as {
+        agent_prompt: AgentPrompt;
+        status_code: number;
+      };
+      expect(envelope.status_code).toBe(200);
+      expect(envelope.agent_prompt).toMatchObject({
+        role,
+        workspace_id: workspaceId,
+        poll_interval_seconds: 20,
+        mode: "start",
+      });
+      expect(envelope.agent_prompt.prompt).toContain("wait_for_updates");
+      expect(envelope.agent_prompt.prompt).toContain(
+        "Both humans still approve",
+      );
+      expect(envelope.agent_prompt.prompt).toContain(
+        role === "buyer"
+          ? "private budget is a ceiling"
+          : "highest feasible price",
+      );
+      const promptPreview = negotiator.getByLabel("Negotiation prompt", {
+        exact: true,
+      });
+      await expect(promptPreview).toHaveValue(envelope.agent_prompt.prompt);
+      await negotiator
+        .getByRole("button", { name: "Copy negotiation prompt" })
+        .click();
+      const copyStatus = negotiator.getByRole("status");
+      await expect(copyStatus).toHaveText(
+        /^(Prompt copied\.|Clipboard access is unavailable)/,
+      );
+      await expect(promptPreview).toBeFocused();
+      expect(
+        await promptPreview.evaluate((element: HTMLTextAreaElement) =>
+          element.value.slice(element.selectionStart, element.selectionEnd),
+        ),
+      ).toBe(envelope.agent_prompt.prompt);
+      if ((await copyStatus.textContent())?.startsWith("Prompt copied.")) {
+        await expect(
+          negotiator.getByRole("button", {
+            name: "Prompt copied",
+            exact: true,
+          }),
+        ).toBeVisible();
+        // Verify native LAN clipboard contents by pasting into a disposable
+        // browser-only field; no marketplace data or objective is changed.
+        await page.evaluate(() => {
+          const field = document.createElement("textarea");
+          field.id = "lan-clipboard-verification";
+          field.setAttribute("aria-label", "Clipboard verification");
+          document.body.append(field);
+          field.focus();
+        });
+        await page.keyboard.press("ControlOrMeta+V");
+        await expect(page.getByLabel("Clipboard verification")).toHaveValue(
+          envelope.agent_prompt.prompt,
+        );
+        await page
+          .locator("#lan-clipboard-verification")
+          .evaluate((element) => element.remove());
+      }
       await page.screenshot({
         path: testInfo.outputPath(`${role}-lan-connections.png`),
         fullPage: true,

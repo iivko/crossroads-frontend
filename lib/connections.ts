@@ -3,8 +3,18 @@ import type { components } from "./generated/api";
 export type Credential = components["schemas"]["Credential"];
 export type IssuedCredential = components["schemas"]["IssuedCredential"];
 export type Provider = components["schemas"]["IdentityProviderStatus"];
+export type AgentPrompt = components["schemas"]["AgentPrompt"];
+export type AgentPromptInput = components["schemas"]["AgentPromptInput"];
 const client = createMarketplaceClient();
 export const connectionsApi = {
+  async prompt(body: AgentPromptInput): Promise<AgentPrompt> {
+    return responseData(
+      await client.POST("/api/v1/agent/prompt", {
+        params: { header: client.browserHeaders() },
+        body,
+      }),
+    ).agent_prompt;
+  },
   async list() {
     return responseData(await client.GET("/api/v1/credentials")).credentials
       .items;

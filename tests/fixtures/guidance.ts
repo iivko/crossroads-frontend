@@ -211,6 +211,15 @@ export async function mockMarketplace(
       payload = envelope("activity", pageOf([]));
     } else if (path.endsWith("/identity/providers")) {
       payload = envelope("identity", { providers: [] });
+    } else if (path.endsWith("/agent/prompt")) {
+      const body = incoming.postDataJSON();
+      payload = envelope("agent_prompt", {
+        prompt: `${selected} ${body.mode}: ${body.objective || "Default strategy"}. Check every 20 seconds.`,
+        role: selected,
+        workspace_id: `${selected}-workspace`,
+        poll_interval_seconds: 20,
+        mode: body.mode,
+      });
     } else if (path.endsWith("/credentials")) {
       payload = envelope("credentials", { items: [] });
     } else if (path.endsWith("/rules")) {

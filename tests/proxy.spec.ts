@@ -265,3 +265,62 @@ for (const suffix of ["act", "claim", "retry", "guidance/extra"]) {
     expect(response.status).toBe(405);
   });
 }
+
+test("prompt generation forwards the exact draft and browser workspace without agent authorization", async () => {
+  const body = {
+    objective: "Improve the deposit",
+    mode: "start",
+    room_id: "room-1",
+    request_id: null,
+  };
+  globalThis.fetch = async (input, init) => {
+    expect(String(input)).toMatch(/\/api\/v1\/agent\/prompt$/);
+    const headers = new Headers(init?.headers);
+    expect(headers.get("cookie")).toBe("market_session=human");
+    expect(headers.get("origin")).toBe("http://localhost:3100");
+    expect(headers.get("x-csrf-token")).toBe("csrf");
+    expect(headers.get("x-workspace-id")).toBe("buyer-workspace");
+    expect(headers.has("authorization")).toBe(false);
+    expect(await new Response(init?.body).json()).toEqual(body);
+    return Response.json({
+      agent_prompt: { prompt: "Buyer prompt" },
+      status_code: 200,
+    });
+  };
+  const response = await POST(
+    new NextRequest("http://localhost:3100/api/v1/agent/prompt", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: "market_session=human",
+        origin: "http://localhost:3100",
+        "x-csrf-token": "csrf",
+        "x-workspace-id": "buyer-workspace",
+        authorization: "Bearer should-not-forward",
+      },
+      body: JSON.stringify(body),
+    }),
+    { params: Promise.resolve({ path: ["agent", "prompt"] }) },
+  );
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+});
+
+for (const path of [
+  ["agent", "prompt", "extra"],
+  ["agent", "start"],
+  ["agent", "instructions"],
+]) {
+  test(`prompt allowlist does not expose POST ${path.join("/")}`, async () => {
+    globalThis.fetch = async () => {
+      throw new Error("Must not reach backend");
+    };
+    const response = await POST(
+      new NextRequest(`http://localhost:3100/api/v1/${path.join("/")}`, {
+        method: "POST",
+      }),
+      { params: Promise.resolve({ path }) },
+    );
+    expect(response.status).toBe(405);
+  });
+}

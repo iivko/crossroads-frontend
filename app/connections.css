@@ -208,9 +208,99 @@
   color: var(--muted);
   font-size: 12px;
 }
+.negotiator-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: var(--np-space-8);
+}
+.negotiator-selects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--np-space-4);
+}
+.negotiator-selects label,
+.negotiator-preview > label {
+  display: grid;
+  gap: var(--np-space-2);
+  font-size: var(--np-text-14);
+  font-weight: 600;
+}
+.negotiator-panel textarea,
+.negotiator-panel select {
+  width: 100%;
+  min-width: 0;
+  padding: var(--np-space-3);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--np-color-border-control);
+  border-radius: var(--np-radius-control);
+  font: inherit;
+  font-size: var(--np-text-16);
+  font-weight: 400;
+}
+.negotiator-panel textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.negotiator-instructions {
+  align-self: start;
+  background: var(--bg);
+  border-radius: var(--np-radius-card);
+  padding: var(--np-space-6);
+  margin-top: var(--np-space-6);
+}
+.negotiator-instructions h4 {
+  margin: 0 0 var(--np-space-4);
+  font-size: var(--np-text-16);
+}
+.negotiator-instructions ol {
+  padding-left: var(--np-space-5);
+  margin: 0;
+}
+.negotiator-instructions li {
+  padding-left: var(--np-space-2);
+  margin-bottom: var(--np-space-4);
+  font-size: var(--np-text-14);
+}
+.negotiator-instructions li span {
+  display: block;
+  color: var(--muted);
+  margin-top: var(--np-space-1);
+}
+.negotiator-instructions > p {
+  margin: 0;
+  padding-top: var(--np-space-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--np-text-12);
+  color: var(--muted);
+}
+.negotiator-preview {
+  display: grid;
+  gap: var(--np-space-4);
+  margin-top: var(--np-space-6);
+  padding-top: var(--np-space-6);
+  border-top: 1px solid var(--border);
+}
+.negotiator-preview textarea {
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: var(--np-text-12);
+  background: var(--bg);
+}
+.negotiator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--np-space-3);
+}
 @media (max-width: 850px) {
   .connection-grid {
     grid-template-columns: 1fr;
+  }
+  .negotiator-layout {
+    grid-template-columns: 1fr;
+    gap: var(--np-space-5);
+  }
+  .negotiator-instructions {
+    margin-top: 0;
   }
   .connection-intro {
     flex-wrap: wrap;
@@ -220,6 +310,12 @@
   }
 }
 @media (max-width: 520px) {
+  .negotiator-selects {
+    grid-template-columns: 1fr;
+  }
+  .negotiator-actions .button {
+    width: 100%;
+  }
   .connection-intro {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
