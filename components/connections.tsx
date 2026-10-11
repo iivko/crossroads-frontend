@@ -12,6 +12,7 @@ import {
 import { readDemoPreviewConfig } from "@/lib/demo-preview";
 import type { Workspace } from "@/lib/api";
 import { mcpEndpoint } from "@/lib/mcp-endpoint";
+import { PluginInstallations } from "./plugin-installations";
 import {
   connectionsApi,
   type Credential,
@@ -67,7 +68,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
   const [name, setName] = useState("My agent");
   const [trading, setTrading] = useState(false);
   const [issued, setIssued] = useState<IssuedCredential | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"token" | "config" | null>(null);
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
   const alive = useRef(true);
   useEffect(() => {
@@ -124,7 +125,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
       const result = await connectionsApi.create(name, scopes);
       if (!alive.current) return;
       setIssued(result);
-      setCopied(false);
+      setCopied(null);
       setCredentials((current) => [
         ...current,
         {
@@ -196,13 +197,15 @@ export function Connections({ workspace }: { workspace: Workspace }) {
     null,
     2,
   );
-  async function copy() {
+  async function copy(kind: "token" | "config") {
     try {
-      await navigator.clipboard.writeText(config);
-      setCopied(true);
+      await navigator.clipboard.writeText(
+        kind === "token" ? issued!.token : config,
+      );
+      setCopied(kind);
     } catch {
       setError(
-        "Clipboard access is unavailable. Select and copy the configuration below.",
+        "Clipboard access is unavailable. Select and copy the private value below.",
       );
     }
   }
@@ -227,13 +230,14 @@ export function Connections({ workspace }: { workspace: Workspace }) {
         <div>
           <h2>Give your agent a seat at the table.</h2>
           <p>
-            Connect Claude Desktop, Claude Code or another local MCP client to{" "}
+            Connect Codex, Claude Code or another local MCP client to{" "}
             <strong>{workspace.name}</strong>. Your agent can follow activity
             and work within the access you choose.
           </p>
         </div>
         <span className="connection-protocol">MCP · local stdio</span>
       </section>
+      <PluginInstallations />
       {error && (
         <div className="alert" role="alert">
           {error}
@@ -243,7 +247,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
         <section className="connection-panel">
           <div className="connection-section-heading">
             <KeyRound size={20} />
-            <h3>Create agent access</h3>
+            <h3>2. Create agent access</h3>
           </div>
           <p>One workspace. Seven days. Revocable at any time.</p>
           <form onSubmit={create}>
@@ -282,7 +286,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
                 onChange={(event) => {
                   setApiUrl(event.target.value);
                   setAllowLanHttp(false);
-                  setCopied(false);
+                  setCopied(null);
                 }}
                 aria-describedby="backend-api-help"
                 required
@@ -295,7 +299,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
                 checked={allowLanHttp}
                 onChange={(event) => {
                   setAllowLanHttp(event.target.checked);
-                  setCopied(false);
+                  setCopied(null);
                 }}
               />
               <span>
@@ -331,18 +335,18 @@ export function Connections({ workspace }: { workspace: Workspace }) {
           </form>
         </section>
         <section className="connection-panel connection-setup">
-          <h3>Your assistant. Your workspace.</h3>
+          <h3>3. Connect your workspace</h3>
           <ol>
             <li>
               <strong>Create access here</strong>
               <span>Choose whether your agent can read or also negotiate.</span>
             </li>
             <li>
-              <strong>Add neopact to your MCP client</strong>
+              <strong>Complete your plugin’s setup</strong>
               <span>
-                Install the backend’s MCP extra with uv, then use the
-                configuration shown after creation. Replace the backend folder
-                path.
+                Follow “Setup after creating access” in your plugin card above.
+                Use the API URL, workspace ID and private token shown below.
+                Enter the token locally; never paste it into an AI chat.
               </span>
             </li>
             <li>
@@ -354,10 +358,11 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             </li>
           </ol>
           <p className="connection-cloud">
-            <strong>ChatGPT / remote connection</strong>
+            <strong>Your agent needs a reachable backend</strong>
             <span>
-              Requires a public HTTPS MCP endpoint and OAuth authorization. This
-              local preview has no hosted connector yet.
+              Use the server address reachable from the computer running your
+              agent. 127.0.0.1 points to that computer. Both plugins run
+              locally; this release has no ChatGPT web or Claude web connector.
             </span>
           </p>
         </section>
@@ -368,7 +373,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
           aria-label="New connection configuration"
         >
           <div className="connection-section-heading">
-            <h3>Save your connection configuration</h3>
+            <h3>Finish your plugin setup</h3>
             <button
               type="button"
               className="icon-button"
@@ -379,27 +384,73 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             </button>
           </div>
           <p>
-            This contains a private token shown once. Store it in your MCP
-            client, then dismiss it. It expires{" "}
+            This private token is shown once. Save it through your plugin’s
+            local setup, then dismiss it. It expires{" "}
             {new Date(issued.expires_at).toLocaleDateString()}.
           </p>
+          <dl className="connection-values">
+            <div>
+              <dt>NEOPACT_MCP_API_URL</dt>
+              <dd>{endpoint?.url}</dd>
+            </div>
+            <div>
+              <dt>NEOPACT_MCP_WORKSPACE</dt>
+              <dd>{workspace.id}</dd>
+            </div>
+            {endpoint?.lanHttp && (
+              <div>
+                <dt>NEOPACT_MCP_ALLOW_LAN_HTTP</dt>
+                <dd>true</dd>
+              </div>
+            )}
+          </dl>
+          <label htmlFor="workspace-agent-token">NEOPACT_MCP_TOKEN</label>
           <textarea
+            id="workspace-agent-token"
             readOnly
-            aria-label="Private MCP configuration"
-            value={config}
+            aria-label="Private workspace token"
+            value={issued.token}
             spellCheck={false}
-            rows={13}
+            rows={2}
           />
           <button
             type="button"
             className="button primary"
-            onClick={() => void copy()}
+            onClick={() => void copy("token")}
           >
-            {copied ? <Check size={16} /> : <Copy size={16} />}{" "}
-            {copied
-              ? "Copied private configuration"
-              : "Copy private configuration"}
+            {copied === "token" ? <Check size={16} /> : <Copy size={16} />}
+            {copied === "token" ? "Copied private token" : "Copy private token"}
           </button>
+          <p role="status">
+            {copied === "token"
+              ? "Private token copied. Paste it only into your local plugin setup."
+              : ""}
+          </p>
+          <details className="connection-manual">
+            <summary>Other MCP clients: manual configuration</summary>
+            <p>
+              For a client such as Claude Desktop, install the backend’s MCP
+              extra with uv and replace the backend folder path in this
+              configuration.
+            </p>
+            <textarea
+              readOnly
+              aria-label="Private MCP configuration"
+              value={config}
+              spellCheck={false}
+              rows={13}
+            />
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => void copy("config")}
+            >
+              {copied === "config" ? <Check size={16} /> : <Copy size={16} />}{" "}
+              {copied === "config"
+                ? "Copied private configuration"
+                : "Copy private configuration"}
+            </button>
+          </details>
         </section>
       )}
       <section className="connection-panel">

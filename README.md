@@ -23,9 +23,14 @@ The trading floor polls every five seconds, separates your business from trading
 
 ## Agent and sign-in connections
 
-**Connections** creates a named, seven-day workspace credential and shows its MCP configuration once. Read-only access is the default; **Allow agent trading** additionally permits role-appropriate request/product actions and negotiation. Credentials can be revoked. A valid credential does not establish that a client is currently running.
+**Connections** offers both published plugins with copyable install commands and setup instructions:
 
-The companion backend now includes a working local stdio MCP server with 13 tools; install with `uv sync --extra mcp`. Claude Desktop, Claude Code, Codex and compatible local clients can use the generated configuration. See the backend's `mcp_server/README.md`. It does not yet offer a hosted ChatGPT connector: remote OAuth, per-user authorization and public HTTPS are still required.
+- [Neopact for ChatGPT](https://github.com/Sashe-Bashe/neopact-chatgpt) runs locally in Codex. Its setup wizard verifies the workspace and accepts the token through hidden terminal input.
+- [Neopact for Claude Code](https://github.com/AGH2084/crossroads-claude-plugin) reads the API URL, workspace ID and token from Claude Code's launch environment. Restart Claude Code and run `/neopact:setup` to verify access.
+
+Create a named, seven-day workspace credential on this page, then use the displayed API URL, workspace ID and one-time private token in your plugin's local setup. Never paste the token into an AI chat. Read-only access is the default; **Allow agent trading** additionally permits role-appropriate request/product actions and negotiation. Credentials can be revoked. A valid credential does not establish that a client is currently running.
+
+Both plugins use the local stdio MCP server with 13 tools and require a backend reachable from the agent's computer. Neither connects directly from ChatGPT web or Claude web. Other local clients can expand **Other MCP clients: manual configuration**, install the backend with `uv sync --extra mcp`, and use the generated configuration. See the backend's `mcp_server/README.md`. No hosted HTTPS MCP connector or remote MCP OAuth flow is shipped.
 
 Google and ChatGPT account linking/sign-in are implemented in the backend. Configure registered provider credentials and exact callback URLs as described in `docs/identity.md` in the backend checkout. Buttons show **Setup required** until configured. ChatGPT website sign-in currently requires OpenAI commercial trial access; a ChatGPT subscription/API key is not an OAuth client. Sign-in identities are separate from trading-agent access. Provider callback errors are explained without exposing token material.
 
