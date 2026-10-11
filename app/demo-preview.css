@@ -1,0 +1,146 @@
+.demo-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--np-space-2) var(--np-space-3);
+}
+.demo-preview-label,
+.demo-preview-status {
+  color: var(--np-color-text-muted);
+  font-size: var(--np-text-12);
+  line-height: var(--np-line-ui);
+}
+.demo-preview-controls {
+  display: inline-flex;
+  border: 1px solid var(--np-color-border-control);
+  border-radius: var(--np-radius-control);
+  background: var(--np-color-surface);
+}
+.demo-preview-controls button {
+  min-height: var(--np-size-control);
+  padding: var(--np-space-2) var(--np-space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--np-color-action);
+  font-family: inherit;
+  font-size: var(--np-text-12);
+  font-weight: var(--np-weight-semibold);
+  line-height: var(--np-line-ui);
+  cursor: pointer;
+}
+.demo-preview-controls button:first-child {
+  border-radius: var(--np-radius-control) 0 0 var(--np-radius-control);
+}
+.demo-preview-controls button:last-child {
+  border-radius: 0 var(--np-radius-control) var(--np-radius-control) 0;
+}
+.demo-preview-controls button + button {
+  border-left: 1px solid var(--np-color-border-control);
+}
+.demo-preview-controls button:hover {
+  background: var(--np-color-surface-subtle);
+}
+.demo-preview-controls button[aria-pressed="true"] {
+  background: var(--np-color-action);
+  color: var(--np-color-on-action);
+}
+.demo-preview-controls button:active {
+  background: var(--np-color-action-active);
+  color: var(--np-color-on-action);
+}
+.demo-preview-controls button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--np-color-focus);
+  outline-offset: 3px;
+}
+.demo-preview-controls button:disabled {
+  background: var(--np-color-disabled-bg);
+  color: var(--np-color-disabled);
+  cursor: wait;
+}
+.demo-preview-status:empty {
+  display: none;
+}
+@media (max-width: 520px) {
+  .demo-preview {
+    align-items: start;
+  }
+  .demo-preview-controls {
+    width: 100%;
+  }
+  .demo-preview-controls button {
+    flex: 1;
+  }
+}
+@media (forced-colors: active) {
+  .demo-preview-controls button[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+}
+
+.demo-trading-action {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.demo-trading-action .button {
+  font-size: 12px;
+  white-space: nowrap;
+  background: var(--np-color-highlight);
+  color: var(--ink);
+  border-color: var(--np-color-highlight);
+}
+.demo-trading-control p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0;
+  max-width: 230px;
+}
+.demo-trading-control > p {
+  margin-top: 8px;
+  max-width: 500px;
+}
+.demo-trading-control > p[role="alert"] {
+  color: var(--red);
+}
+.demo-trading-action .button[aria-busy="true"] svg {
+  animation: demo-spin 1.2s linear infinite;
+}
+@keyframes demo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-trading-action .button[aria-busy="true"] svg {
+    animation: none;
+  }
+}
+@media (max-width: 1100px) {
+  .demo-trading-action {
+    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+@media (max-width: 700px) {
+  .preview-toolbar:has(.demo-preview) {
+    flex-direction: column-reverse;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .demo-trading-action {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .demo-preview {
+    flex-wrap: nowrap;
+  }
+  .demo-preview-label {
+    white-space: nowrap;
+  }
+}

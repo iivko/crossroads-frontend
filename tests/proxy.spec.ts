@@ -14,6 +14,56 @@ test.afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
+test("OAuth redirects preserve transaction cookies and suppress referrer disclosure", async () => {
+  globalThis.fetch = async (_input, options) => {
+    expect(options?.redirect).toBe("manual");
+    return new Response(null, {
+      status: 303,
+      headers: {
+        location: "https://accounts.google.com/o/oauth2/v2/auth?state=opaque",
+        "set-cookie":
+          "neopact_identity=bound; HttpOnly; SameSite=Lax; Path=/api/v1/identity",
+      },
+    });
+  };
+  const response = await GET(
+    new NextRequest("http://localhost:3187/api/v1/identity/google/login"),
+    { params: Promise.resolve({ path: ["identity", "google", "login"] }) },
+  );
+  expect(response.status).toBe(303);
+  expect(response.headers.get("location")).toContain(
+    "https://accounts.google.com/",
+  );
+  expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+  expect(response.headers.getSetCookie()).toHaveLength(1);
+});
+
+test("credential management forwards browser security and leaves authorization to backend", async () => {
+  globalThis.fetch = async (_input, options) => {
+    const headers = new Headers(options?.headers);
+    expect(headers.get("x-csrf-token")).toBe("csrf");
+    expect(headers.get("x-workspace-id")).toBe("seller-workspace");
+    expect(headers.get("authorization")).toBeNull();
+    return Response.json({
+      credential: { id: "agent-1", revoked: true },
+      status_code: 200,
+    });
+  };
+  const response = await DELETE(
+    new NextRequest("http://localhost:3187/api/v1/credentials/agent-1", {
+      method: "DELETE",
+      headers: {
+        cookie: "market_session=browser",
+        "x-csrf-token": "csrf",
+        "x-workspace-id": "seller-workspace",
+        authorization: "Bearer not-forwarded",
+      },
+    }),
+    { params: Promise.resolve({ path: ["credentials", "agent-1"] }) },
+  );
+  expect(response.status).toBe(200);
+});
+
 test("dashboard proxy refuses agent operations with the standard error envelope", async () => {
   globalThis.fetch = async () => {
     throw new Error("Must not reach the backend");

@@ -13,10 +13,11 @@ async function proxy(
     !isRead &&
     !(
       req.method === "POST" &&
-      /^(auth\/(session|logout)|approvals\/[^/]+\/(approve|reject)|negotiations\/[^/]+\/guidance)$/.test(
+      /^(auth\/(session|logout)|credentials|identity\/(google|openai)\/link|approvals\/[^/]+\/(approve|reject)|negotiations\/[^/]+\/guidance)$/.test(
         route,
       )
-    )
+    ) &&
+    !(req.method === "DELETE" && /^credentials\/[^/]+$/.test(route))
   ) {
     return Response.json(
       {
@@ -57,8 +58,9 @@ async function proxy(
     const outgoing = new Headers({
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "no-referrer",
     });
-    for (const name of ["content-type", "content-disposition"]) {
+    for (const name of ["content-type", "content-disposition", "location"]) {
       const value = upstream.headers.get(name);
       if (value) outgoing.set(name, value);
     }

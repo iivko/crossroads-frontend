@@ -10,7 +10,7 @@
     "test": "playwright test",
     "format": "prettier --write app components lib tests scripts *.ts *.json",
     "format:check": "prettier --check app components lib tests scripts *.ts *.json",
-    "test:unit": "playwright test api-client.spec.ts proxy.spec.ts",
+    "test:unit": "playwright test api-client.spec.ts proxy.spec.ts demo-preview.spec.ts demo-trading.spec.ts trading-activity.spec.ts",
     "test:ui": "playwright test --config playwright.guidance.config.ts",
     "api:fetch": "bash scripts/fetch-openapi.sh",
     "api:generate": "bash scripts/fetch-openapi.sh --offline",

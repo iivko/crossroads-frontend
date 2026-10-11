@@ -209,6 +209,10 @@ export async function mockMarketplace(
       payload = envelope("orders", pageOf(state.orders[selected]));
     } else if (path.endsWith("/activity")) {
       payload = envelope("activity", pageOf([]));
+    } else if (path.endsWith("/identity/providers")) {
+      payload = envelope("identity", { providers: [] });
+    } else if (path.endsWith("/credentials")) {
+      payload = envelope("credentials", { items: [] });
     } else if (path.endsWith("/rules")) {
       payload = envelope("rules", {
         effective:
