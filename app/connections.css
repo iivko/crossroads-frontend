@@ -146,6 +146,9 @@
 .connection-cloud span {
   display: block;
 }
+.connection-cloud + .connection-cloud {
+  margin-top: 16px;
+}
 .connection-cloud span {
   font-size: 12px;
   margin-top: 4px;
@@ -208,6 +211,42 @@
   color: var(--muted);
   font-size: 12px;
 }
+.provider-login-option {
+  display: grid;
+  gap: 8px;
+}
+.login-form-wrap .provider-action {
+  margin-top: 0;
+  height: auto;
+  gap: 12px;
+  text-align: left;
+  white-space: normal;
+}
+.provider-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.provider-name svg {
+  flex-shrink: 0;
+}
+.provider-action-state {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+.provider-retry {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+.provider-retry small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.provider-retry .text-button {
+  min-height: 44px;
+}
 @media (max-width: 850px) {
   .connection-grid {
     grid-template-columns: 1fr;
@@ -220,6 +259,13 @@
   }
 }
 @media (max-width: 520px) {
+  .login-form-wrap .provider-action {
+    flex-wrap: wrap;
+  }
+  .provider-action-state {
+    flex-basis: 100%;
+    text-align: left;
+  }
   .connection-intro {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);

@@ -18,39 +18,11 @@ import {
   type IssuedCredential,
   type Provider,
 } from "@/lib/connections";
-
-export function ProviderSignIn() {
-  const [providers, setProviders] = useState<Provider[]>([]);
-  useEffect(() => {
-    let alive = true;
-    connectionsApi
-      .providers()
-      .then((value) => {
-        if (alive) setProviders(value);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
-  const ready = providers.filter((provider) => provider.configured);
-  if (!ready.length) return null;
-  return (
-    <div className="provider-signin">
-      {ready.map((provider) => (
-        <a
-          key={provider.id}
-          className="button quiet wide"
-          href={`/api/v1/identity/${provider.id}/login`}
-        >
-          Continue with {provider.label}
-          <ArrowUpRight size={16} />
-        </a>
-      ))}
-      <small>Use an identity already linked to your workspace account.</small>
-    </div>
-  );
-}
+import {
+  IdentityProviderOptions,
+  useIdentityProviders,
+} from "./identity-providers";
+export { ProviderSignIn } from "./identity-providers";
 
 export function Connections({ workspace }: { workspace: Workspace }) {
   const [projectDirectory, setProjectDirectory] = useState(
@@ -59,7 +31,7 @@ export function Connections({ workspace }: { workspace: Workspace }) {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [apiUrl, setApiUrl] = useState("http://127.0.0.1:8100/api/v1");
   const [allowLanHttp, setAllowLanHttp] = useState(false);
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const identity = useIdentityProviders();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [providerError, setProviderError] = useState("");
@@ -91,14 +63,6 @@ export function Connections({ workspace }: { workspace: Workspace }) {
       })
       .finally(() => {
         if (alive.current) setLoading(false);
-      });
-    connectionsApi
-      .providers()
-      .then((value) => {
-        if (alive.current) setProviders(value);
-      })
-      .catch((cause) => {
-        if (alive.current) setProviderError(cause.message);
       });
     return () => {
       alive.current = false;
@@ -354,6 +318,13 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             </li>
           </ol>
           <p className="connection-cloud">
+            <strong>Claude Desktop / Claude Code</strong>
+            <span>
+              Connect through MCP using the workspace access above. Your Claude
+              account sign-in is managed in your Claude client.
+            </span>
+          </p>
+          <p className="connection-cloud">
             <strong>ChatGPT / remote connection</strong>
             <span>
               Requires a public HTTPS MCP endpoint and OAuth authorization. This
@@ -496,36 +467,12 @@ export function Connections({ workspace }: { workspace: Workspace }) {
             {providerError}
           </div>
         )}
-        <div className="provider-list">
-          {providers.map((provider) => (
-            <div className="provider-row" key={provider.id}>
-              <div>
-                <strong>{provider.label}</strong>
-                <small>
-                  {provider.linked
-                    ? "Linked to your account"
-                    : provider.configured
-                      ? "Ready to link"
-                      : provider.id === "openai"
-                        ? "Requires approved OpenAI client registration"
-                        : "Requires Google OAuth client configuration"}
-                </small>
-              </div>
-              <button
-                type="button"
-                className="button quiet"
-                disabled={!provider.configured || provider.linked || busy}
-                onClick={() => void link(provider)}
-              >
-                {provider.linked
-                  ? "Linked"
-                  : provider.configured
-                    ? "Link account"
-                    : "Setup required"}
-              </button>
-            </div>
-          ))}
-        </div>
+        <IdentityProviderOptions
+          {...identity}
+          mode="link"
+          busy={busy}
+          onLink={(provider) => void link(provider)}
+        />
       </section>
     </div>
   );
